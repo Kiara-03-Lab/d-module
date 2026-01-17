@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>dmod - Differential Equation Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Base Colors (80-90%) */
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Accent Colors (10-20%) */
+            --red-500: #ef4444;
+            --red-600: #dc2626;
+            --red-700: #b91c1c;
+            --red-50: #fef2f2;
+            
+            --orange-500: #f97316;
+            --orange-600: #ea580c;
+            --orange-50: #fff7ed;
+            
+            /* Semantic */
+            --success: #22c55e;
+            --success-bg: #f0fdf4;
+            
+            /* Safe Areas */
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--white);
+            min-height: 100vh;
+            color: var(--gray-800);
+            padding: 20px;
+            padding-top: calc(20px + var(--safe-top));
+            padding-bottom: calc(20px + var(--safe-bottom));
+            padding-left: calc(20px + var(--safe-left));
+            padding-right: calc(20px + var(--safe-right));
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            color: var(--gray-500);
+            font-size: 1rem;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: var(--gray-100);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-height: 44px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--gray-600);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--gray-800);
+            background: var(--gray-50);
+        }
+
+        .tab-btn:focus {
+            outline: none;
+        }
+
+        .tab-btn:focus-visible {
+            outline: 2px solid var(--gray-400);
+            outline-offset: 2px;
+        }
+
+        .tab-btn.active {
+            background: var(--white);
+            color: var(--gray-900);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Input Area */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1.1rem;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            background: var(--white);
+            color: var(--gray-900);
+            transition: all 0.2s ease;
+            min-height: 44px;
+        }
+
+        input[type="text"]:hover {
+            border-color: var(--gray-400);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--gray-500);
+            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.15);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--gray-400);
+        }
+
+        input[type="text"].input-error {
+            border-color: var(--red-500);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        /* Inline Error Message */
+        .error-message {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 12px 14px;
+            background: var(--red-50);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            color: var(--red-600);
+            font-size: 0.9rem;
+            animation: shake 0.3s ease;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Primary CTA Button - RED */
+        .analyze-btn {
+            width: 100%;
+            min-height: 48px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            background: var(--red-500);
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .analyze-btn:hover {
+            background: var(--red-600);
+        }
+
+        .analyze-btn:focus {
+            outline: none;
+        }
+
+        .analyze-btn:focus-visible {
+            outline: 2px solid var(--red-500);
+            outline-offset: 2px;
+        }
+
+        .analyze-btn:active {
+            background: var(--red-700);
+            transform: scale(0.98);
+        }
+
+        /* Examples - Secondary emphasis with ORANGE */
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            align-items: center;
+        }
+
+        .examples-label {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+            margin-right: 4px;
+        }
+
+        .example-btn {
+            min-height: 36px;
+            padding: 8px 14px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background: var(--white);
+            color: var(--gray-700);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .example-btn:hover {
+            border-color: var(--orange-500);
+            color: var(--orange-600);
+            background: var(--orange-50);
+        }
+
+        .example-btn:focus {
+            outline: none;
+        }
+
+        .example-btn:focus-visible {
+            outline: 2px solid var(--orange-500);
+            outline-offset: 2px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--gray-500);
+            border: 2px dashed var(--gray-200);
+            border-radius: 12px;
+            background: var(--gray-50);
+        }
+
+        .empty-state-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-state-text {
+            font-size: 1rem;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
+
+        .empty-state-hint {
+            font-size: 0.85rem;
+            color: var(--gray-400);
+        }
+
+        /* Results */
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-item {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .result-label {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-value {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            color: var(--gray-800);
+            flex: 1;
+            text-align: right;
+            word-break: break-word;
+            font-weight: 500;
+        }
+
+        .result-value.highlight {
+            color: var(--success);
+        }
+
+        .result-value.highlight::before {
+            content: "✓ ";
+        }
+
+        .result-value.warning {
+            color: var(--orange-600);
+        }
+
+        .result-value.warning::before {
+            content: "⚠ ";
+        }
+
+        /* Solution Box - Success state with subtle green */
+        .solution-box {
+            background: var(--success-bg);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .solution-title {
+            color: var(--gray-800);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .solution-content {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 1rem;
+            color: var(--gray-900);
+            line-height: 1.8;
+        }
+
+        /* Interpretation Box - Orange for emphasis */
+        .interpretation-box {
+            background: var(--orange-50);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .interpretation-title {
+            color: var(--gray-800);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .interpretation-box p {
+            color: var(--gray-700);
+            font-size: 0.95rem;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 48px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--gray-500);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        .loading p {
+            color: var(--gray-500);
+            font-size: 0.95rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Help Section */
+        .help-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .help-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--gray-700);
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .help-item {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 14px;
+            border: 1px solid var(--gray-100);
+        }
+
+        .help-item code {
+            display: block;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            color: var(--gray-800);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .help-item span {
+            color: var(--gray-500);
+            font-size: 0.8rem;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* Skip Link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--gray-800);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: 0 0 8px 0;
+            z-index: 100;
+            transition: top 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body {
+                padding: 16px;
+            }
+            
+            h1 { font-size: 1.5rem; }
+            
+            .card { padding: 20px; }
+            
+            .tabs { 
+                flex-direction: column;
+                gap: 2px;
+            }
+            
+            .tab-btn {
+                justify-content: flex-start;
+                padding-left: 16px;
+            }
+            
+            .result-item { 
+                flex-direction: column; 
+            }
+            
+            .result-value { 
+                text-align: left; 
+            }
+            
+            .example-btn {
+                min-height: 44px;
+                padding: 12px 16px;
+            }
+        }
+
+        /* High Contrast Mode */
+        @media (prefers-contrast: high) {
+            .tab-btn, .analyze-btn, .example-btn {
+                border: 2px solid currentColor;
+            }
+            
+            .result-value.highlight {
+                text-decoration: underline;
+            }
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div class="container">
+        <header>
+            <h1>dmod</h1>
+            <p class="subtitle">Differential Equation Analyzer</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs" role="tablist" aria-label="Equation types">
+            <button class="tab-btn active" data-tab="ode" role="tab" aria-selected="true" aria-controls="ode" id="tab-ode">
+                <span class="tab-icon" aria-hidden="true">📈</span>
+                <span>Solve ODE</span>
+            </button>
+            <button class="tab-btn" data-tab="pde" role="tab" aria-selected="false" aria-controls="pde" id="tab-pde">
+                <span class="tab-icon" aria-hidden="true">🌊</span>
+                <span>Analyze PDE</span>
+            </button>
+            <button class="tab-btn" data-tab="singularity" role="tab" aria-selected="false" aria-controls="singularity" id="tab-singularity">
+                <span class="tab-icon" aria-hidden="true">💎</span>
+                <span>Singularity</span>
+            </button>
+        </nav>
+
+        <main id="main-content">
+            <!-- ODE Tab -->
+            <div id="ode" class="tab-content active" role="tabpanel" aria-labelledby="tab-ode">
+                <div class="card">
+                    <h2 class="card-title">Solve Ordinary Differential Equation</h2>
+                    
+                    <div class="input-group">
+                        <label for="ode-input">Enter your ODE (use y', y'', y''' for derivatives)</label>
+                        <input type="text" id="ode-input" placeholder="y'' + y = 0" aria-describedby="ode-error">
+                        <div class="error-message" id="ode-error" role="alert" aria-live="polite">
+                            <span aria-hidden="true">⚠️</span>
+                            <span>Please enter an equation to solve</span>
+                        </div>
+                    </div>
+
+                    <button class="analyze-btn" onclick="solveODE()" aria-label="Solve the ODE equation">
+                        Solve Equation
+                    </button>
+
+                    <div class="examples">
+                        <span class="examples-label">Try:</span>
+                        <button class="example-btn" onclick="setExample('ode', `y'' + y = 0`)">y'' + y = 0</button>
+                        <button class="example-btn" onclick="setExample('ode', `y'' + 2y' + y = 0`)">y'' + 2y' + y = 0</button>
+                        <button class="example-btn" onclick="setExample('ode', `y''' - y = 0`)">y''' - y = 0</button>
+                        <button class="example-btn" onclick="setExample('ode', `y' - 2y = 0`)">y' - 2y = 0</button>
+                    </div>
+                </div>
+
+                <div class="loading" id="ode-loading" aria-live="polite">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Solving equation...</p>
+                </div>
+
+                <div class="results" id="ode-results">
+                    <div class="card">
+                        <h3 class="card-title">Results</h3>
+                        <div id="ode-output"></div>
+                    </div>
+                </div>
+
+                <div class="empty-state" id="ode-empty">
+                    <div class="empty-state-icon" aria-hidden="true">📈</div>
+                    <p class="empty-state-text">Enter an ODE above to see the solution</p>
+                    <p class="empty-state-hint">Or click one of the examples to get started</p>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title">How to write ODEs</h3>
+                    <div class="help-grid">
+                        <div class="help-item">
+                            <code>y' = 2y</code>
+                            <span>First derivative (y prime)</span>
+                        </div>
+                        <div class="help-item">
+                            <code>y'' + y = 0</code>
+                            <span>Second derivative (harmonic oscillator)</span>
+                        </div>
+                        <div class="help-item">
+                            <code>y'' + 2y' + y = 0</code>
+                            <span>Damped oscillator</span>
+                        </div>
+                        <div class="help-item">
+                            <code>y''' - y = 0</code>
+                            <span>Third order equation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDE Tab -->
+            <div id="pde" class="tab-content" role="tabpanel" aria-labelledby="tab-pde">
+                <div class="card">
+                    <h2 class="card-title">Analyze Partial Differential Equation</h2>
+                    
+                    <div class="input-group">
+                        <label for="pde-input">Enter your PDE (use u_t, u_x, u_xx for partial derivatives)</label>
+                        <input type="text" id="pde-input" placeholder="u_t = u_xx" aria-describedby="pde-error">
+                        <div class="error-message" id="pde-error" role="alert" aria-live="polite">
+                            <span aria-hidden="true">⚠️</span>
+                            <span>Please enter an equation to analyze</span>
+                        </div>
+                    </div>
+
+                    <button class="analyze-btn" onclick="analyzePDE()" aria-label="Analyze the PDE equation">
+                        Analyze Equation
+                    </button>
+
+                    <div class="examples">
+                        <span class="examples-label">Try:</span>
+                        <button class="example-btn" onclick="setExample('pde', 'u_t = u_xx')">u_t = u_xx</button>
+                        <button class="example-btn" onclick="setExample('pde', 'u_tt = u_xx')">u_tt = u_xx</button>
+                        <button class="example-btn" onclick="setExample('pde', 'u_xx + u_yy = 0')">u_xx + u_yy = 0</button>
+                    </div>
+                </div>
+
+                <div class="loading" id="pde-loading" aria-live="polite">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Analyzing equation...</p>
+                </div>
+
+                <div class="results" id="pde-results">
+                    <div class="card">
+                        <h3 class="card-title">Results</h3>
+                        <div id="pde-output"></div>
+                    </div>
+                </div>
+
+                <div class="empty-state" id="pde-empty">
+                    <div class="empty-state-icon" aria-hidden="true">🌊</div>
+                    <p class="empty-state-text">Enter a PDE above to see the analysis</p>
+                    <p class="empty-state-hint">Or click one of the examples to get started</p>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title">How to write PDEs</h3>
+                    <div class="help-grid">
+                        <div class="help-item">
+                            <code>u_t = u_xx</code>
+                            <span>Heat equation (diffusion)</span>
+                        </div>
+                        <div class="help-item">
+                            <code>u_tt = u_xx</code>
+                            <span>Wave equation</span>
+                        </div>
+                        <div class="help-item">
+                            <code>u_xx + u_yy = 0</code>
+                            <span>Laplace equation</span>
+                        </div>
+                        <div class="help-item">
+                            <code>u_t + u_x = 0</code>
+                            <span>Transport equation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Singularity Tab -->
+            <div id="singularity" class="tab-content" role="tabpanel" aria-labelledby="tab-singularity">
+                <div class="card">
+                    <h2 class="card-title">Analyze Singularity</h2>
+                    
+                    <div class="input-group">
+                        <label for="sing-input">Enter a polynomial (use ^ for powers)</label>
+                        <input type="text" id="sing-input" placeholder="x^2 - y^3" aria-describedby="sing-error">
+                        <div class="error-message" id="sing-error" role="alert" aria-live="polite">
+                            <span aria-hidden="true">⚠️</span>
+                            <span>Please enter a polynomial to analyze</span>
+                        </div>
+                    </div>
+
+                    <button class="analyze-btn" onclick="analyzeSingularity()" aria-label="Analyze the singularity">
+                        Analyze Singularity
+                    </button>
+
+                    <div class="examples">
+                        <span class="examples-label">Try:</span>
+                        <button class="example-btn" onclick="setExample('sing', 'x^2 - y^3')">x² - y³ (cusp)</button>
+                        <button class="example-btn" onclick="setExample('sing', 'x^2 - y^2')">x² - y² (node)</button>
+                        <button class="example-btn" onclick="setExample('sing', 'x^2 + y^2')">x² + y² (smooth)</button>
+                        <button class="example-btn" onclick="setExample('sing', 'x^3 - y^2')">x³ - y²</button>
+                    </div>
+                </div>
+
+                <div class="loading" id="sing-loading" aria-live="polite">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Computing b-function...</p>
+                </div>
+
+                <div class="results" id="sing-results">
+                    <div class="card">
+                        <h3 class="card-title">Results</h3>
+                        <div id="sing-output"></div>
+                    </div>
+                </div>
+
+                <div class="empty-state" id="sing-empty">
+                    <div class="empty-state-icon" aria-hidden="true">💎</div>
+                    <p class="empty-state-text">Enter a polynomial above to analyze its singularity</p>
+                    <p class="empty-state-hint">Or click one of the examples to get started</p>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title">What is singularity analysis?</h3>
+                    <div class="help-grid">
+                        <div class="help-item">
+                            <code>LCT (Log Canonical Threshold)</code>
+                            <span>Measures "how bad" the singularity is. Lower = worse.</span>
+                        </div>
+                        <div class="help-item">
+                            <code>Cusp (x² - y³)</code>
+                            <span>Sharp point, LCT = 1/3</span>
+                        </div>
+                        <div class="help-item">
+                            <code>Node (x² - y²)</code>
+                            <span>Crossing point, LCT = 1/2</span>
+                        </div>
+                        <div class="help-item">
+                            <code>Smooth (x² + y²)</code>
+                            <span>No singularity at origin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Tab switching with keyboard support
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchTab(btn.dataset.tab);
+            });
+            
+            btn.addEventListener('keydown', (e) => {
+                const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+                const currentIndex = tabs.indexOf(btn);
+                
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const nextIndex = (currentIndex + 1) % tabs.length;
+                    tabs[nextIndex].focus();
+                    switchTab(tabs[nextIndex].dataset.tab);
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                    tabs[prevIndex].focus();
+                    switchTab(tabs[prevIndex].dataset.tab);
+                }
+            });
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-selected', 'true');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function setExample(type, value) {
+            const inputId = type === 'sing' ? 'sing-input' : `${type}-input`;
+            const input = document.getElementById(inputId);
+            input.value = value;
+            clearError(type);
+            input.focus();
+        }
+
+        function showError(type, message) {
+            const inputId = type === 'sing' ? 'sing-input' : `${type}-input`;
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(`${type}-error`);
+            
+            input.classList.add('input-error');
+            errorEl.querySelector('span:last-child').textContent = message;
+            errorEl.classList.add('show');
+            
+            const emptyState = document.getElementById(`${type}-empty`);
+            if (emptyState) emptyState.style.display = 'none';
+        }
+
+        function clearError(type) {
+            const inputId = type === 'sing' ? 'sing-input' : `${type}-input`;
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(`${type}-error`);
+            
+            input.classList.remove('input-error');
+            errorEl.classList.remove('show');
+        }
+
+        function solveODE() {
+            const input = document.getElementById('ode-input').value.trim();
+            clearError('ode');
+            
+            if (!input) {
+                showError('ode', 'Please enter an equation to solve');
+                return;
+            }
+
+            document.getElementById('ode-empty').style.display = 'none';
+            showLoading('ode');
+
+            setTimeout(() => {
+                try {
+                    const result = computeODE(input);
+                    displayODEResult(result);
+                } catch (e) {
+                    displayError('ode', e.message);
+                }
+                hideLoading('ode');
+            }, 500);
+        }
+
+        function computeODE(equation) {
+            const order = (equation.match(/y'+/g) || [])
+                .reduce((max, m) => Math.max(max, m.length - 1), 0) || 
+                (equation.includes("y'") ? 1 : 0);
+
+            let charPoly = '';
+            let roots = [];
+            let basis = [];
+            let general = '';
+
+            if (order === 1) {
+                const match = equation.match(/y'\s*([+-])\s*(\d*)y/);
+                if (match) {
+                    const sign = match[1] === '-' ? 1 : -1;
+                    const coef = match[2] ? parseInt(match[2]) : 1;
+                    const a = sign * coef;
+                    charPoly = `λ - ${a}`;
+                    roots = [[a, 1]];
+                    basis = a === 0 ? ['1'] : [`e^(${a}x)`];
+                    general = `C₁·${basis[0]}`;
+                } else if (equation.includes("y' = ") || equation.includes("y'=")) {
+                    const match2 = equation.match(/=\s*(-?\d*)y/);
+                    const a = match2 ? (match2[1] === '-' ? -1 : parseInt(match2[1]) || 1) : 1;
+                    charPoly = `λ - ${a}`;
+                    roots = [[a, 1]];
+                    basis = [`e^(${a}x)`];
+                    general = `C₁·${basis[0]}`;
+                }
+            } else if (order === 2) {
+                let a = 0, b = 0;
+                
+                if (equation.includes("y'' + y = 0") || equation.includes("y''+y=0")) {
+                    a = 0; b = 1;
+                } else if (equation.includes("y'' - y = 0") || equation.includes("y''-y=0")) {
+                    a = 0; b = -1;
+                } else {
+                    if (equation.includes("2y'")) a = 2;
+                    else if (equation.includes("3y'")) a = 3;
+                    else if (equation.includes("-y'")) a = -1;
+                    else if (equation.includes("y'") && !equation.includes("y''")) a = 1;
+                    
+                    if (equation.match(/[+-]\s*y\s*=/) || equation.match(/\+\s*y\s*=/)) b = 1;
+                    else if (equation.match(/-\s*y\s*=/)) b = -1;
+                    else if (equation.includes("+ y =")) b = 1;
+                }
+
+                charPoly = `λ² + ${a}λ + ${b}`;
+                const discriminant = a*a - 4*b;
+                
+                if (discriminant > 0) {
+                    const r1 = (-a + Math.sqrt(discriminant)) / 2;
+                    const r2 = (-a - Math.sqrt(discriminant)) / 2;
+                    roots = [[r1, 1], [r2, 1]];
+                    basis = [`e^(${r1}x)`, `e^(${r2}x)`];
+                } else if (discriminant === 0) {
+                    const r = -a / 2;
+                    roots = [[r, 2]];
+                    basis = r === 0 ? ['1', 'x'] : [`e^(${r}x)`, `x·e^(${r}x)`];
+                } else {
+                    const real = -a / 2;
+                    const imag = Math.sqrt(-discriminant) / 2;
+                    roots = [[`${real} + ${imag}i`, 1], [`${real} - ${imag}i`, 1]];
+                    if (real === 0) {
+                        basis = [`cos(${imag}x)`, `sin(${imag}x)`];
+                    } else {
+                        basis = [`e^(${real}x)·cos(${imag}x)`, `e^(${real}x)·sin(${imag}x)`];
+                    }
+                }
+                general = basis.map((b, i) => `C${i+1}·${b}`).join(' + ');
+            } else if (order === 3) {
+                if (equation.includes("y''' - y = 0")) {
+                    charPoly = 'λ³ - 1';
+                    roots = [[1, 1], ['-1/2 + i√3/2', 1], ['-1/2 - i√3/2', 1]];
+                    basis = ['e^x', 'e^(-x/2)·cos(√3x/2)', 'e^(-x/2)·sin(√3x/2)'];
+                    general = 'C₁·e^x + C₂·e^(-x/2)·cos(√3x/2) + C₃·e^(-x/2)·sin(√3x/2)';
+                }
+            }
+
+            return {
+                equation,
+                order,
+                charPoly: charPoly || `Order ${order} characteristic polynomial`,
+                roots: roots.length ? roots : [['Complex computation', 1]],
+                basis: basis.length ? basis : ['Requires numerical solver'],
+                general: general || 'C₁·y₁ + C₂·y₂ + ...'
+            };
+        }
+
+        function displayODEResult(result) {
+            const html = `
+                <div class="result-item">
+                    <span class="result-label">Equation</span>
+                    <span class="result-value">${result.equation}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Order</span>
+                    <span class="result-value highlight">${result.order}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Characteristic Polynomial</span>
+                    <span class="result-value">${result.charPoly}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Roots</span>
+                    <span class="result-value">${result.roots.map(r => `${r[0]} (mult: ${r[1]})`).join(', ')}</span>
+                </div>
+                
+                <div class="solution-box">
+                    <div class="solution-title">Solution Basis</div>
+                    <div class="solution-content">
+                        ${result.basis.map((b, i) => `y${i+1} = ${b}`).join('<br>')}
+                    </div>
+                </div>
+                
+                <div class="solution-box" style="margin-top: 12px;">
+                    <div class="solution-title">General Solution</div>
+                    <div class="solution-content">y(x) = ${result.general}</div>
+                </div>
+            `;
+            
+            document.getElementById('ode-output').innerHTML = html;
+            document.getElementById('ode-results').classList.add('show');
+        }
+
+        function analyzePDE() {
+            const input = document.getElementById('pde-input').value.trim();
+            clearError('pde');
+            
+            if (!input) {
+                showError('pde', 'Please enter an equation to analyze');
+                return;
+            }
+
+            document.getElementById('pde-empty').style.display = 'none';
+            showLoading('pde');
+
+            setTimeout(() => {
+                try {
+                    const result = computePDE(input);
+                    displayPDEResult(result);
+                } catch (e) {
+                    displayError('pde', e.message);
+                }
+                hideLoading('pde');
+            }, 500);
+        }
+
+        function computePDE(equation) {
+            const vars = new Set();
+            const matches = equation.match(/u_([a-z]+)/g) || [];
+            matches.forEach(m => {
+                const subscript = m.replace('u_', '');
+                for (const char of subscript) vars.add(char);
+            });
+
+            const order = Math.max(...(matches.map(m => m.length - 2) || [0]));
+
+            let type = `Order ${order} PDE`;
+            let classification = '';
+            let interpretation = '';
+
+            const hasTime = vars.has('t');
+            const hasUt = equation.includes('u_t');
+            const hasUtt = equation.includes('u_tt');
+            const hasUxx = equation.includes('u_xx');
+            const hasUyy = equation.includes('u_yy');
+
+            if (order === 2) {
+                if (hasUt && !hasUtt && hasUxx) {
+                    classification = 'Parabolic';
+                    type = 'Heat Equation Type';
+                    interpretation = 'This is a diffusion equation. Solutions smooth out over time, like heat spreading through a material.';
+                } else if (hasUtt && hasUxx) {
+                    classification = 'Hyperbolic';
+                    type = 'Wave Equation Type';
+                    interpretation = 'This is a wave equation. Solutions propagate at finite speed, like vibrations on a string.';
+                } else if (hasUxx && hasUyy && !hasTime) {
+                    classification = 'Elliptic';
+                    type = 'Laplace Equation Type';
+                    interpretation = 'This is an equilibrium equation. Solutions represent steady states, like electrostatic potentials.';
+                }
+            } else if (order === 1) {
+                if (hasUt) {
+                    type = 'Transport Equation Type';
+                    interpretation = 'This is a transport equation. Solutions move without changing shape.';
+                }
+            }
+
+            return {
+                equation,
+                order,
+                variables: Array.from(vars).sort(),
+                type,
+                classification,
+                interpretation,
+                isHolonomic: vars.size <= matches.length
+            };
+        }
+
+        function displayPDEResult(result) {
+            const html = `
+                <div class="result-item">
+                    <span class="result-label">Equation</span>
+                    <span class="result-value">${result.equation}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Order</span>
+                    <span class="result-value highlight">${result.order}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Variables</span>
+                    <span class="result-value">${result.variables.join(', ')}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Type</span>
+                    <span class="result-value highlight">${result.type}</span>
+                </div>
+                ${result.classification ? `
+                <div class="result-item">
+                    <span class="result-label">Classification</span>
+                    <span class="result-value">${result.classification}</span>
+                </div>
+                ` : ''}
+                
+                ${result.interpretation ? `
+                <div class="interpretation-box">
+                    <div class="interpretation-title">What does this mean?</div>
+                    <p>${result.interpretation}</p>
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('pde-output').innerHTML = html;
+            document.getElementById('pde-results').classList.add('show');
+        }
+
+        function analyzeSingularity() {
+            const input = document.getElementById('sing-input').value.trim();
+            clearError('sing');
+            
+            if (!input) {
+                showError('sing', 'Please enter a polynomial to analyze');
+                return;
+            }
+
+            document.getElementById('sing-empty').style.display = 'none';
+            showLoading('sing');
+
+            setTimeout(() => {
+                try {
+                    const result = computeSingularity(input);
+                    displaySingularityResult(result);
+                } catch (e) {
+                    displayError('sing', e.message);
+                }
+                hideLoading('sing');
+            }, 500);
+        }
+
+        function computeSingularity(polynomial) {
+            const vars = new Set(polynomial.match(/[a-z]/g) || ['x']);
+            
+            let lct = 1;
+            let type = 'unknown';
+            let roots = [];
+            let bPoly = '';
+            let jumpingNumbers = [];
+            let isSmooth = true;
+            let severity = '';
+
+            const normalized = polynomial.replace(/\s/g, '').replace(/\*\*/g, '^');
+
+            if (normalized.includes('x^2-y^3') || normalized.includes('x^2-y³')) {
+                lct = 1/3;
+                type = 'Cusp (A₂)';
+                roots = [[-1, 1], [-2/3, 1], [-1/2, 1], [-1/3, 1]];
+                bPoly = '(s+1)(s+2/3)(s+1/2)(s+1/3)';
+                jumpingNumbers = ['1/3', '1/2', '2/3', '1'];
+                isSmooth = false;
+                severity = 'Significant singularity - sharp cusp point';
+            } else if (normalized.includes('x^2-y^2') || normalized.includes('x²-y²')) {
+                lct = 1/2;
+                type = 'Node (A₁)';
+                roots = [[-1, 1], [-1/2, 1]];
+                bPoly = '(s+1)(s+1/2)';
+                jumpingNumbers = ['1/2', '1'];
+                isSmooth = false;
+                severity = 'Mild singularity - self-crossing point';
+            } else if (normalized.includes('x^2+y^2') || normalized.includes('x²+y²')) {
+                lct = 1;
+                type = 'Smooth Point';
+                roots = [[-1, 1]];
+                bPoly = '(s+1)';
+                jumpingNumbers = ['1'];
+                isSmooth = true;
+                severity = 'No singularity at origin - smooth curve';
+            } else if (normalized.includes('x^3-y^2') || normalized.includes('x³-y²')) {
+                lct = 1/2;
+                type = 'Cusp (A₂ variant)';
+                roots = [[-1, 1], [-1/2, 1], [-1/3, 1]];
+                bPoly = '(s+1)(s+1/2)(s+1/3)';
+                jumpingNumbers = ['1/3', '1/2', '1'];
+                isSmooth = false;
+                severity = 'Moderate singularity';
+            } else if (normalized.match(/x\^?2/)) {
+                lct = 1/2;
+                type = 'Simple zero';
+                roots = [[-1, 1], [-1/2, 1]];
+                bPoly = '(s+1)(s+1/2)';
+                jumpingNumbers = ['1/2', '1'];
+                isSmooth = false;
+                severity = 'Standard singularity';
+            }
+
+            return {
+                polynomial,
+                variables: Array.from(vars),
+                lct,
+                lctFraction: lct === 1/3 ? '1/3' : lct === 1/2 ? '1/2' : lct === 2/3 ? '2/3' : lct.toString(),
+                type,
+                roots,
+                bPoly,
+                jumpingNumbers,
+                isSmooth,
+                severity
+            };
+        }
+
+        function displaySingularityResult(result) {
+            const html = `
+                <div class="result-item">
+                    <span class="result-label">Polynomial</span>
+                    <span class="result-value">${result.polynomial}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Variables</span>
+                    <span class="result-value">${result.variables.join(', ')}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Singularity Type</span>
+                    <span class="result-value highlight">${result.type}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Log Canonical Threshold</span>
+                    <span class="result-value highlight" style="font-size: 1.2rem;">${result.lctFraction}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Is Smooth?</span>
+                    <span class="result-value ${result.isSmooth ? 'highlight' : 'warning'}">${result.isSmooth ? 'Yes' : 'No'}</span>
+                </div>
+                
+                <div class="solution-box">
+                    <div class="solution-title">Bernstein-Sato Polynomial</div>
+                    <div class="solution-content">b(s) = ${result.bPoly}</div>
+                </div>
+                
+                <div class="result-item" style="margin-top: 12px;">
+                    <span class="result-label">Roots of b(s)</span>
+                    <span class="result-value">${result.roots.map(r => `${r[0]}`).join(', ')}</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Jumping Numbers</span>
+                    <span class="result-value">${result.jumpingNumbers.join(', ')}</span>
+                </div>
+                
+                <div class="interpretation-box">
+                    <div class="interpretation-title">Interpretation</div>
+                    <p>${result.severity}</p>
+                    <p style="margin-top: 10px; color: var(--gray-500); font-size: 0.85rem;">
+                        The LCT (Log Canonical Threshold) measures singularity severity:<br>
+                        • LCT = 1: smooth (no singularity)<br>
+                        • LCT = 1/2: mild (like a crossing point)<br>
+                        • LCT < 1/2: severe (sharp cusps, worse singularities)
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('sing-output').innerHTML = html;
+            document.getElementById('sing-results').classList.add('show');
+        }
+
+        function showLoading(type) {
+            document.getElementById(`${type}-loading`).classList.add('show');
+            document.getElementById(`${type}-results`).classList.remove('show');
+        }
+
+        function hideLoading(type) {
+            document.getElementById(`${type}-loading`).classList.remove('show');
+        }
+
+        function displayError(type, message) {
+            const html = `
+                <div class="interpretation-box" style="background: var(--red-50); border-color: rgba(239, 68, 68, 0.2);">
+                    <div class="interpretation-title" style="color: var(--red-600);">Error</div>
+                    <p style="color: var(--red-600);">${message}</p>
+                </div>
+            `;
+            document.getElementById(`${type}-output`).innerHTML = html;
+            document.getElementById(`${type}-results`).classList.add('show');
+        }
+
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const id = input.id;
+                    if (id.includes('ode')) solveODE();
+                    else if (id.includes('pde')) analyzePDE();
+                    else if (id.includes('sing')) analyzeSingularity();
+                }
+            });
+            
+            input.addEventListener('input', () => {
+                const type = input.id.includes('ode') ? 'ode' : 
+                             input.id.includes('pde') ? 'pde' : 'sing';
+                clearError(type);
+            });
+        });
+    </script>
+</body>
+</html>
